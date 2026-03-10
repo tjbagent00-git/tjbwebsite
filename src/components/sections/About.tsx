@@ -12,7 +12,7 @@ const specialties = [
   "Strategic Planning",
   "Systems Design",
   "Product Licensing",
-  "Servant Leadership",
+  "Cross-functional Alignment",
 ];
 
 const transformations = [
@@ -51,22 +51,21 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <p className="text-lg leading-relaxed text-zinc-400">
-              I&apos;m an energetic, self-directed collaborator with over 15
-              years of product and program management experience. My specialty is
-              digital transformation products and platforms that span business
-              functions — and I have delivered in every iteration of enterprise
-              technology transformation.
+              I helped a $2B company replatform its entire business model to
+              subscription — and watched software revenue grow 350% year over
+              year as a result. I shipped a 0-to-1 digital twin product at Unity
+              that bridged a game engine into industrial simulation. Now I run AI
+              programs in the Office of the CTO at F5, translating agentic AI
+              capabilities into enterprise strategy and product outcomes.
             </p>
             <p className="mt-4 text-lg leading-relaxed text-zinc-400">
-              From SOA to multi-cloud to simulation and digital twins, and now
-              AI process integration — I have a track record of helping
-              organizations define and deliver progressive value against
-              immediate returns and long-term business objectives.
-            </p>
-            <p className="mt-4 text-lg leading-relaxed text-zinc-400">
-              Today, I lead AI programs in the Office of the CTO at F5,
-              translating emerging AI and agentic capabilities into enterprise
-              strategy and real product outcomes.
+              The pattern across 15+ years is the same: show up at the
+              inflection point, figure out what the technology actually makes
+              possible for the business, and build the organizational and product
+              capabilities to get there. SOA, multi-cloud, digital twins, AI —
+              I&apos;ve had a front-row seat to every major enterprise technology
+              shift. Not as an observer, but as the person accountable for
+              defining and delivering the change.
             </p>
           </motion.div>
 

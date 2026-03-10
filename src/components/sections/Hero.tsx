@@ -45,11 +45,11 @@ export default function Hero() {
           transition={{ duration: 0.6, delay: 0.35 }}
           className="mb-8 text-xl leading-relaxed text-zinc-400 sm:text-2xl"
         >
-          Enterprise product leader at the forefront of every major technology
-          transformation.{" "}
+          I&apos;ve driven enterprise transformation at every inflection point —
+          cloud, digital twins, now AI.{" "}
           <span className="text-zinc-200">
-            From cloud to digital twins to AI — helping organizations define and
-            deliver the future.
+            I don&apos;t just follow the wave. I help organizations catch it
+            before it breaks.
           </span>
         </motion.p>
 
