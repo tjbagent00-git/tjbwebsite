@@ -2,117 +2,66 @@
 
 import { motion } from "framer-motion";
 
-interface Role {
+interface FeaturedRole {
   title: string;
   company: string;
-  location: string;
   period: string;
-  highlights: string[];
   current?: boolean;
+  narrative: string;
+  metric?: { value: string; label: string };
 }
 
-const roles: Role[] = [
+interface EarlierRole {
+  title: string;
+  company: string;
+  period: string;
+}
+
+const featuredRoles: FeaturedRole[] = [
   {
     title: "Technical Program Manager — AI CoE & AI Program",
-    company: "F5 Networks",
-    location: "Seattle, WA",
+    company: "F5 Networks, Office of the CTO",
     period: "2023 — Present",
     current: true,
-    highlights: [
-      "Leading AI programs in the Office of the CTO, coordinating enterprise AI strategy and execution across F5.",
-      "Driving adoption of agentic AI and process integration initiatives across product and engineering organizations.",
-    ],
+    narrative:
+      "Leading enterprise AI strategy and program execution in the Office of the CTO — translating agentic AI capabilities into product and business outcomes across F5's portfolio. Responsible for coordinating AI adoption, identifying high-value automation opportunities, and connecting AI research to real product impact.",
   },
   {
-    title: "Sr. Product Manager — 3D Spatial Co-simulation & Operational Digital Twins",
+    title: "Sr. Product Manager — Digital Twins & Spatial Co-simulation",
     company: "Unity Technologies",
-    location: "Seattle, WA",
     period: "2021 — 2023",
-    highlights: [
-      "Defined customer experience, value proposition, and market strategy to bridge Unity's game engine into an industrial co-simulation product for testing spatial navigation software in 3D environments.",
-      "Led 0-to-1 product release working directly with early customers and Unity dev teams to develop and ship the alpha product.",
-      "Developed technology and market analysis around digital twins, real-time 3D content production, and enterprise operational process integrations that informed product strategy.",
-      "Drove go-to-market motions across sales, marketing, customer commercial experience, and pricing & packaging.",
-    ],
+    narrative:
+      "Shipped a 0-to-1 product that bridged Unity's game engine into industrial simulation — creating a new product category for testing spatial navigation software in digital twin environments. Defined the market strategy, customer experience, and go-to-market from the ground up alongside early enterprise customers.",
+    metric: { value: "0→1", label: "New product category" },
   },
   {
-    title: "Sr. Product Manager — Product Licensing & Go-to-Market Systems",
+    title: "Sr. Product Manager — Product Licensing & GTM Systems",
     company: "F5 Networks",
-    location: "Seattle, WA",
     period: "2018 — 2021",
-    highlights: [
-      "Drove the business model definition and architectural change of a $2B company in its transition to subscription and utility-based software — directly attributed to 350% y/y growth in software subscription revenue and 30% of company revenues becoming subscription-based.",
-      "Defined and developed cloud-based licensing & device management platform architecture and its integration with the full product portfolio (software, hardware, SaaS, services).",
-      "Defined and delivered 3+ new licensing programs and the business architecture necessary to bring them to market.",
-      "Led enterprise-wide technical solution design & delivery through product and enterprise architects across sales, product, IT, legal, finance, services, and channel partners.",
-    ],
+    narrative:
+      "Drove the business model transformation of a $2B company in its shift from perpetual to subscription licensing — directly attributable to 350% year-over-year growth in software subscription revenue and 30% of total company revenue becoming subscription-based. Defined the cloud licensing platform architecture and led its integration across the full product portfolio.",
+    metric: { value: "350%", label: "Y/Y software revenue growth" },
   },
-  {
-    title: "Product Manager — Licensing",
-    company: "F5 Networks",
-    location: "Seattle, WA",
-    period: "2016 — 2018",
-    highlights: [
-      "Developed new consumption-based software licensing business models and built the business and technical capabilities necessary to transact that business.",
-    ],
-  },
-  {
-    title: "Marketing Program Manager",
-    company: "F5 Networks",
-    location: "Seattle, WA",
-    period: "2014 — 2016",
-    highlights: [
-      "Delivered multiple product go-to-market launches and marketing programs supporting over $1B in annual revenue.",
-      "Provided market trend analysis around hybrid cloud services and bi-modal IT operational shifts that drove corporate strategy and product roadmap planning.",
-      "Developed Marketing department program & portfolio management methodology for all marketing efforts, content production, and resource capacity planning.",
-    ],
-  },
-  {
-    title: "IT Project Manager III",
-    company: "F5 Networks",
-    location: "Seattle, WA",
-    period: "2013 — 2014",
-    highlights: [
-      "Led multiple concurrent projects across Sales Operations, HR, Product Development, and Information Security.",
-      "Led system design and application selection for a new sales CPQ tool that cut time-to-market and sales quoting time in half.",
-      "Led the corporate-wide effort to define global customer data information security risk, working with legal counsel and system architects to design a scalable data privacy solution.",
-    ],
-  },
-  {
-    title: "IT Project Lead",
-    company: "Liberty Mutual Group",
-    location: "Seattle, WA",
-    period: "2009 — 2013",
-    highlights: [
-      "Led global cross-functional project teams of 10–25 people across multi-million dollar programs including data migrations, application architectural designs, and business process automations.",
-      "Merged three Project Management Offices and methodologies into one uniform System Development Lifecycle.",
-      "Led a team of architects in developing a technical roadmap to migrate critical customer information from legacy to target systems without impacting business operations.",
-    ],
-  },
-  {
-    title: "Sr. IT Business Systems Analyst",
-    company: "Safeco Insurance",
-    location: "Seattle, WA",
-    period: "2006 — 2009",
-    highlights: [
-      "Worked with CIO to launch the first IT Project Management Office for a $60M transformational IT program.",
-      "Led initiative to remove personally identifiable information stored in insecure environments across infrastructure systems.",
-    ],
-  },
+];
+
+const earlierRoles: EarlierRole[] = [
+  { title: "Product Manager — Licensing", company: "F5 Networks", period: "2016–2018" },
+  { title: "Marketing Program Manager", company: "F5 Networks", period: "2014–2016" },
+  { title: "IT Project Manager III", company: "F5 Networks", period: "2013–2014" },
+  { title: "IT Project Lead", company: "Liberty Mutual Group", period: "2009–2013" },
+  { title: "Sr. IT Business Systems Analyst", company: "Safeco Insurance", period: "2006–2009" },
 ];
 
 const education = [
   {
     degree: "Master of Business Administration",
     school: "University of Washington",
-    location: "Seattle, WA",
     year: "2016",
-    detail: "GPA 3.8 · Organizational Leadership & Global Business Strategy · MBA consulting engagements in Shanghai, Buenos Aires, and Santiago",
+    detail: "GPA 3.8 · Organizational Leadership & Global Business Strategy · Consulting engagements in Shanghai, Buenos Aires, and Santiago",
   },
   {
     degree: "BA Information Systems · BA Marketing",
     school: "University of Idaho",
-    location: "Moscow, ID",
     year: "2004",
     detail: "Dual degree",
   },
@@ -132,76 +81,92 @@ export default function Experience() {
             Experience
           </p>
           <h2 className="mb-12 text-4xl font-bold tracking-tight text-zinc-50 sm:text-5xl">
-            15+ years delivering
-            <br />
-            <span className="text-zinc-500">enterprise transformation.</span>
+            Signature work.
           </h2>
         </motion.div>
 
-        {/* Roles */}
-        <div className="relative">
-          {/* Timeline line */}
-          <div className="absolute left-0 top-0 h-full w-px bg-gradient-to-b from-indigo-500/50 via-zinc-700/50 to-transparent hidden md:block" />
-
-          <div className="flex flex-col gap-10">
-            {roles.map((role, i) => (
-              <motion.div
-                key={`${role.company}-${role.period}`}
-                initial={{ opacity: 0, x: -16 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="md:pl-8 relative"
-              >
-                {/* Timeline dot */}
-                <div
-                  className={`absolute left-[-4.5px] top-1.5 hidden md:block h-2.5 w-2.5 rounded-full border-2 ${
-                    role.current
-                      ? "border-indigo-400 bg-indigo-500"
-                      : "border-zinc-600 bg-zinc-900"
-                  }`}
-                />
-
-                <div
-                  className={`rounded-xl border p-6 transition-colors ${
-                    role.current
-                      ? "border-indigo-500/30 bg-indigo-500/5"
-                      : "border-white/8 bg-white/[0.03] hover:bg-white/5"
-                  }`}
-                >
-                  <div className="flex flex-col gap-1 mb-4 sm:flex-row sm:items-start sm:justify-between">
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <h3 className="text-base font-semibold text-zinc-100 leading-snug">
-                          {role.title}
-                        </h3>
-                        {role.current && (
-                          <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 text-xs font-medium text-indigo-300">
-                            Current
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-sm text-indigo-300 mt-0.5">
-                        {role.company} · {role.location}
-                      </p>
-                    </div>
-                    <span className="text-sm text-zinc-500 shrink-0 mt-1 sm:mt-0">
-                      {role.period}
-                    </span>
+        {/* Featured roles */}
+        <div className="flex flex-col gap-6 mb-16">
+          {featuredRoles.map((role, i) => (
+            <motion.div
+              key={`${role.company}-${role.period}`}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.5, delay: i * 0.08 }}
+              className={`rounded-xl border p-6 sm:p-8 ${
+                role.current
+                  ? "border-indigo-500/30 bg-indigo-500/5"
+                  : "border-white/8 bg-white/[0.03]"
+              }`}
+            >
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                <div className="flex-1">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h3 className="text-base font-semibold text-zinc-100 leading-snug">
+                      {role.title}
+                    </h3>
+                    {role.current && (
+                      <span className="rounded-full bg-indigo-500/20 border border-indigo-500/30 px-2 py-0.5 text-xs font-medium text-indigo-300">
+                        Current
+                      </span>
+                    )}
                   </div>
-                  <ul className="flex flex-col gap-2">
-                    {role.highlights.map((h, j) => (
-                      <li key={j} className="flex gap-2 text-sm text-zinc-400 leading-relaxed">
-                        <span className="mt-1.5 h-1 w-1 shrink-0 rounded-full bg-zinc-600" />
-                        {h}
-                      </li>
-                    ))}
-                  </ul>
+                  <p className="text-sm text-indigo-300 mb-1">{role.company}</p>
+                  <p className="text-sm text-zinc-600 mb-4">{role.period}</p>
+                  <p className="text-sm text-zinc-400 leading-relaxed">{role.narrative}</p>
                 </div>
-              </motion.div>
+                {role.metric && (
+                  <div className="sm:text-right sm:ml-8 sm:shrink-0">
+                    <p className="text-4xl font-bold text-zinc-100 leading-none">
+                      {role.metric.value}
+                    </p>
+                    <p className="mt-1 text-xs text-zinc-600 sm:max-w-[120px] sm:ml-auto leading-snug">
+                      {role.metric.label}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Earlier career */}
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          className="mb-16"
+        >
+          <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-zinc-600">
+            Earlier career
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {earlierRoles.map((role) => (
+              <div
+                key={`${role.title}-${role.period}`}
+                className="flex items-baseline justify-between gap-4 rounded-lg border border-white/5 bg-white/[0.02] px-4 py-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm font-medium text-zinc-300 truncate">{role.title}</p>
+                  <p className="text-xs text-zinc-600 mt-0.5">{role.company}</p>
+                </div>
+                <span className="text-xs text-zinc-700 shrink-0">{role.period}</span>
+              </div>
             ))}
           </div>
-        </div>
+          <div className="mt-5">
+            <a
+              href="https://www.linkedin.com/in/tjbush/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm text-zinc-500 hover:text-zinc-300 transition-colors"
+            >
+              Full career history on LinkedIn →
+            </a>
+          </div>
+        </motion.div>
 
         {/* Education */}
         <motion.div
@@ -209,9 +174,8 @@ export default function Experience() {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="mt-16"
         >
-          <p className="mb-6 text-sm font-semibold uppercase tracking-widest text-zinc-500">
+          <p className="mb-5 text-xs font-semibold uppercase tracking-widest text-zinc-600">
             Education
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
