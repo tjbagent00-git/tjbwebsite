@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Playfair_Display } from "next/font/google";
 import "./globals.css";
+import DigitalTwinWidget from "@/components/ui/DigitalTwinWidget";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -36,6 +37,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${playfair.variable} antialiased bg-zinc-950 text-zinc-100`}
       >
         {children}
+        <DigitalTwinWidget />
       </body>
     </html>
   );
