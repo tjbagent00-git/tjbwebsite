@@ -2,8 +2,14 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import StreamingAvatar, {
+  AvatarQuality,
+  StreamingEvents,
+  TaskType,
+} from "@heygen/streaming-avatar";
 
 const BRAIN_URL = process.env.NEXT_PUBLIC_BRAIN_URL!;
+const AVATAR_ID = process.env.NEXT_PUBLIC_HEYGEN_AVATAR_ID!;
 
 interface Message {
   role: "user" | "assistant";
@@ -32,6 +38,8 @@ declare global {
   }
 }
 
+type AvatarStatus = "idle" | "connecting" | "ready" | "error";
+
 export default function DigitalTwinWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -39,12 +47,14 @@ export default function DigitalTwinWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [avatarStatus, setAvatarStatus] = useState<AvatarStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const avatarRef = useRef<StreamingAvatar | null>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -54,7 +64,16 @@ export default function DigitalTwinWidget() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
+  // Initialize HeyGen avatar when widget opens
   useEffect(() => {
+    if (isOpen && avatarStatus === "idle") {
+      initAvatar();
+    }
+    if (!isOpen && avatarRef.current) {
+      avatarRef.current.stopAvatar();
+      avatarRef.current = null;
+      setAvatarStatus("idle");
+    }
     if (isOpen && messages.length === 0) {
       setMessages([
         {
@@ -69,17 +88,49 @@ export default function DigitalTwinWidget() {
     }
   }, [isOpen]);
 
-  const playAudio = useCallback((base64: string) => {
-    if (audioRef.current) {
-      audioRef.current.pause();
+  const initAvatar = useCallback(async () => {
+    setAvatarStatus("connecting");
+    try {
+      const tokenRes = await fetch("/api/heygen-token", { method: "POST" });
+      const { token } = await tokenRes.json();
+      if (!token) throw new Error("No token");
+
+      const avatar = new StreamingAvatar({ token });
+      avatarRef.current = avatar;
+
+      avatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsSpeaking(true));
+      avatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsSpeaking(false));
+      avatar.on(StreamingEvents.STREAM_READY, (event) => {
+        if (videoRef.current && event.detail) {
+          videoRef.current.srcObject = event.detail;
+          videoRef.current.play().catch(() => {});
+        }
+        setAvatarStatus("ready");
+      });
+      avatar.on(StreamingEvents.STREAM_DISCONNECTED, () => {
+        setAvatarStatus("idle");
+      });
+
+      await avatar.createStartAvatar({
+        avatarName: AVATAR_ID,
+        quality: AvatarQuality.Medium,
+      });
+    } catch {
+      setAvatarStatus("error");
     }
-    const audio = new Audio(`data:audio/mp3;base64,${base64}`);
-    audioRef.current = audio;
-    setIsSpeaking(true);
-    audio.onended = () => setIsSpeaking(false);
-    audio.onerror = () => setIsSpeaking(false);
-    audio.play().catch(() => setIsSpeaking(false));
   }, []);
+
+  const speakResponse = useCallback(async (text: string) => {
+    if (!avatarRef.current || avatarStatus !== "ready") return;
+    try {
+      await avatarRef.current.speak({
+        text,
+        taskType: TaskType.REPEAT,
+      });
+    } catch {
+      // avatar speak failed silently
+    }
+  }, [avatarStatus]);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -103,7 +154,6 @@ export default function DigitalTwinWidget() {
         });
 
         if (!response.ok) throw new Error("Request failed");
-
         const data = await response.json();
 
         setMessages((prev) => [
@@ -111,9 +161,7 @@ export default function DigitalTwinWidget() {
           { role: "assistant", content: data.text },
         ]);
 
-        if (data.audio) {
-          playAudio(data.audio);
-        }
+        await speakResponse(data.text);
       } catch {
         setError("Something went wrong. Try again.");
         setMessages((prev) => prev.slice(0, -1));
@@ -121,7 +169,7 @@ export default function DigitalTwinWidget() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, playAudio]
+    [isLoading, messages, speakResponse]
   );
 
   const startListening = useCallback(() => {
@@ -133,12 +181,10 @@ export default function DigitalTwinWidget() {
     recognition.lang = "en-US";
     recognition.interimResults = false;
     recognition.maxAlternatives = 1;
-
     recognition.onresult = (event) => {
       const transcript = event.results[0][0].transcript;
       sendMessage(transcript);
     };
-
     recognition.onend = () => setIsListening(false);
     recognition.onerror = () => setIsListening(false);
 
@@ -153,7 +199,7 @@ export default function DigitalTwinWidget() {
   }, []);
 
   const stopSpeaking = useCallback(() => {
-    audioRef.current?.pause();
+    avatarRef.current?.stopAvatar();
     setIsSpeaking(false);
   }, []);
 
@@ -192,35 +238,64 @@ export default function DigitalTwinWidget() {
 
             {/* Panel */}
             <motion.div
-              className="fixed bottom-6 right-6 z-50 flex w-[min(420px,calc(100vw-2rem))] flex-col rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl overflow-hidden"
+              className="fixed bottom-6 right-6 z-50 flex w-[min(440px,calc(100vw-2rem))] flex-col rounded-2xl border border-white/10 bg-zinc-900 shadow-2xl overflow-hidden"
               initial={{ opacity: 0, scale: 0.92, y: 20 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              style={{ maxHeight: "min(600px, calc(100vh - 3rem))" }}
+              style={{ maxHeight: "min(680px, calc(100vh - 3rem))" }}
             >
-              {/* Header */}
-              <div className="flex items-center gap-3 border-b border-white/8 px-4 py-3">
-                <div className="relative">
-                  <div className="h-9 w-9 rounded-full bg-indigo-600/20 ring-1 ring-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm font-bold">
-                    TJ
+              {/* Avatar video area */}
+              <div className="relative bg-zinc-950 w-full aspect-video overflow-hidden">
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  className={`w-full h-full object-cover transition-opacity duration-500 ${
+                    avatarStatus === "ready" ? "opacity-100" : "opacity-0"
+                  }`}
+                />
+
+                {/* Overlay when not ready */}
+                {avatarStatus !== "ready" && (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
+                    <div className="h-16 w-16 rounded-full bg-indigo-600/20 ring-1 ring-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl font-bold">
+                      TJ
+                    </div>
+                    {avatarStatus === "connecting" && (
+                      <p className="text-xs text-zinc-500 animate-pulse">
+                        Connecting…
+                      </p>
+                    )}
+                    {avatarStatus === "error" && (
+                      <p className="text-xs text-red-400">
+                        Avatar unavailable
+                      </p>
+                    )}
                   </div>
-                  {isSpeaking && (
-                    <span className="absolute -bottom-0.5 -right-0.5 flex h-3 w-3">
-                      <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75" />
-                      <span className="relative inline-flex rounded-full h-3 w-3 bg-indigo-500" />
-                    </span>
-                  )}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-semibold text-zinc-100">TJ Bush</p>
-                  <p className="text-xs text-zinc-500">Digital Twin</p>
-                </div>
-                <div className="flex items-center gap-1">
+                )}
+
+                {/* Speaking indicator */}
+                {isSpeaking && (
+                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
+                    {[0, 1, 2].map((i) => (
+                      <motion.div
+                        key={i}
+                        className="h-1 w-1 rounded-full bg-indigo-400"
+                        animate={{ scaleY: [1, 2.5, 1] }}
+                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                      />
+                    ))}
+                    <span className="text-xs text-zinc-300 ml-1">Speaking</span>
+                  </div>
+                )}
+
+                {/* Close + stop buttons */}
+                <div className="absolute top-2 right-2 flex gap-1">
                   {isSpeaking && (
                     <button
                       onClick={stopSpeaking}
-                      className="rounded-lg p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors"
+                      className="rounded-lg p-1.5 bg-black/50 text-zinc-400 hover:text-white transition-colors"
                       title="Stop speaking"
                     >
                       <StopIcon />
@@ -228,7 +303,7 @@ export default function DigitalTwinWidget() {
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="rounded-lg p-1.5 text-zinc-500 hover:text-zinc-300 hover:bg-white/5 transition-colors"
+                    className="rounded-lg p-1.5 bg-black/50 text-zinc-400 hover:text-white transition-colors"
                     aria-label="Close"
                   >
                     <CloseIcon />
@@ -236,8 +311,16 @@ export default function DigitalTwinWidget() {
                 </div>
               </div>
 
+              {/* Header */}
+              <div className="flex items-center gap-3 border-b border-white/8 px-4 py-2.5">
+                <div>
+                  <p className="text-sm font-semibold text-zinc-100">TJ Bush</p>
+                  <p className="text-xs text-zinc-500">Digital Twin · AI & Product Leader</p>
+                </div>
+              </div>
+
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 min-h-0">
+              <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 min-h-0">
                 {messages.map((msg, i) => (
                   <motion.div
                     key={i}
@@ -271,11 +354,7 @@ export default function DigitalTwinWidget() {
                             key={i}
                             className="h-1.5 w-1.5 rounded-full bg-zinc-500"
                             animate={{ opacity: [0.3, 1, 0.3] }}
-                            transition={{
-                              duration: 1,
-                              repeat: Infinity,
-                              delay: i * 0.2,
-                            }}
+                            transition={{ duration: 1, repeat: Infinity, delay: i * 0.2 }}
                           />
                         ))}
                       </div>
@@ -308,8 +387,6 @@ export default function DigitalTwinWidget() {
                     disabled={isLoading || isListening}
                     className="flex-1 rounded-xl bg-zinc-800 px-4 py-2.5 text-sm text-zinc-100 placeholder-zinc-600 outline-none focus:ring-1 focus:ring-indigo-500/50 disabled:opacity-50 transition-all"
                   />
-
-                  {/* Mic button */}
                   <button
                     type="button"
                     onMouseDown={startListening}
@@ -326,8 +403,6 @@ export default function DigitalTwinWidget() {
                   >
                     <MicIcon />
                   </button>
-
-                  {/* Send button */}
                   <button
                     type="submit"
                     disabled={!input.trim() || isLoading}
