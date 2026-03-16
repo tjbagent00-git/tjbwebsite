@@ -2,14 +2,8 @@
 
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import StreamingAvatar, {
-  AvatarQuality,
-  StreamingEvents,
-  TaskType,
-} from "@heygen/streaming-avatar";
 
 const BRAIN_URL = process.env.NEXT_PUBLIC_BRAIN_URL!;
-const AVATAR_ID = process.env.NEXT_PUBLIC_HEYGEN_AVATAR_ID!;
 
 interface Message {
   role: "user" | "assistant";
@@ -38,8 +32,6 @@ declare global {
   }
 }
 
-type AvatarStatus = "idle" | "connecting" | "ready" | "error";
-
 export default function DigitalTwinWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -47,14 +39,12 @@ export default function DigitalTwinWidget() {
   const [isLoading, setIsLoading] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
-  const [avatarStatus, setAvatarStatus] = useState<AvatarStatus>("idle");
   const [error, setError] = useState<string | null>(null);
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
-  const avatarRef = useRef<StreamingAvatar | null>(null);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -64,16 +54,7 @@ export default function DigitalTwinWidget() {
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  // Initialize HeyGen avatar when widget opens
   useEffect(() => {
-    if (isOpen && avatarStatus === "idle") {
-      initAvatar();
-    }
-    if (!isOpen && avatarRef.current) {
-      avatarRef.current.stopAvatar();
-      avatarRef.current = null;
-      setAvatarStatus("idle");
-    }
     if (isOpen && messages.length === 0) {
       setMessages([
         {
@@ -86,52 +67,32 @@ export default function DigitalTwinWidget() {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 300);
     }
+    if (!isOpen && audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
+      setIsSpeaking(false);
+    }
   }, [isOpen]);
 
-  const initAvatar = useCallback(async () => {
-    setAvatarStatus("connecting");
-    try {
-      const tokenRes = await fetch("/api/heygen-token", { method: "POST" });
-      const { token } = await tokenRes.json();
-      if (!token) throw new Error("No token");
-
-      const avatar = new StreamingAvatar({ token });
-      avatarRef.current = avatar;
-
-      avatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsSpeaking(true));
-      avatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsSpeaking(false));
-      avatar.on(StreamingEvents.STREAM_READY, (stream) => {
-        if (videoRef.current && stream) {
-          videoRef.current.srcObject = stream;
-          videoRef.current.play().catch(() => {});
-        }
-        setAvatarStatus("ready");
-      });
-      avatar.on(StreamingEvents.STREAM_DISCONNECTED, () => {
-        setAvatarStatus("idle");
-      });
-
-      await avatar.createStartAvatar({
-        avatarName: AVATAR_ID,
-        quality: AvatarQuality.Medium,
-      });
-    } catch (err) {
-      console.error("HeyGen avatar init failed:", err);
-      setAvatarStatus("error");
+  const playAudio = useCallback((base64: string) => {
+    if (audioRef.current) {
+      audioRef.current.pause();
     }
+    const audio = new Audio(`data:audio/mpeg;base64,${base64}`);
+    audioRef.current = audio;
+    audio.onplay = () => setIsSpeaking(true);
+    audio.onended = () => setIsSpeaking(false);
+    audio.onerror = () => setIsSpeaking(false);
+    audio.play().catch(() => {});
   }, []);
 
-  const speakResponse = useCallback(async (text: string) => {
-    if (!avatarRef.current || avatarStatus !== "ready") return;
-    try {
-      await avatarRef.current.speak({
-        text,
-        taskType: TaskType.REPEAT,
-      });
-    } catch {
-      // avatar speak failed silently
+  const stopSpeaking = useCallback(() => {
+    if (audioRef.current) {
+      audioRef.current.pause();
+      audioRef.current = null;
     }
-  }, [avatarStatus]);
+    setIsSpeaking(false);
+  }, []);
 
   const sendMessage = useCallback(
     async (text: string) => {
@@ -162,7 +123,9 @@ export default function DigitalTwinWidget() {
           { role: "assistant", content: data.text },
         ]);
 
-        await speakResponse(data.text);
+        if (data.audio) {
+          playAudio(data.audio);
+        }
       } catch {
         setError("Something went wrong. Try again.");
         setMessages((prev) => prev.slice(0, -1));
@@ -170,7 +133,7 @@ export default function DigitalTwinWidget() {
         setIsLoading(false);
       }
     },
-    [isLoading, messages, speakResponse]
+    [isLoading, messages, playAudio]
   );
 
   const startListening = useCallback(() => {
@@ -197,11 +160,6 @@ export default function DigitalTwinWidget() {
   const stopListening = useCallback(() => {
     recognitionRef.current?.stop();
     setIsListening(false);
-  }, []);
-
-  const stopSpeaking = useCallback(() => {
-    avatarRef.current?.stopAvatar();
-    setIsSpeaking(false);
   }, []);
 
   return (
@@ -244,59 +202,38 @@ export default function DigitalTwinWidget() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.92, y: 20 }}
               transition={{ duration: 0.25, ease: "easeOut" }}
-              style={{ maxHeight: "min(680px, calc(100vh - 3rem))" }}
+              style={{ maxHeight: "min(580px, calc(100vh - 3rem))" }}
             >
-              {/* Avatar video area */}
-              <div className="relative bg-zinc-950 w-full aspect-video overflow-hidden">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className={`w-full h-full object-cover transition-opacity duration-500 ${
-                    avatarStatus === "ready" ? "opacity-100" : "opacity-0"
-                  }`}
-                />
-
-                {/* Overlay when not ready */}
-                {avatarStatus !== "ready" && (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3">
-                    <div className="h-16 w-16 rounded-full bg-indigo-600/20 ring-1 ring-indigo-500/30 flex items-center justify-center text-indigo-400 text-xl font-bold">
-                      TJ
+              {/* Header */}
+              <div className="flex items-center justify-between border-b border-white/8 px-4 py-3">
+                <div className="flex items-center gap-3">
+                  <div className="h-9 w-9 rounded-full bg-indigo-600/20 ring-1 ring-indigo-500/30 flex items-center justify-center text-indigo-400 text-sm font-bold flex-shrink-0">
+                    TJ
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-100">TJ Bush</p>
+                    <div className="flex items-center gap-1.5">
+                      <p className="text-xs text-zinc-500">Digital Twin · AI & Product Leader</p>
+                      {isSpeaking && (
+                        <span className="flex items-center gap-0.5">
+                          {[0, 1, 2].map((i) => (
+                            <motion.span
+                              key={i}
+                              className="block h-1 w-0.5 rounded-full bg-indigo-400"
+                              animate={{ scaleY: [1, 2.5, 1] }}
+                              transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+                            />
+                          ))}
+                        </span>
+                      )}
                     </div>
-                    {avatarStatus === "connecting" && (
-                      <p className="text-xs text-zinc-500 animate-pulse">
-                        Connecting…
-                      </p>
-                    )}
-                    {avatarStatus === "error" && (
-                      <p className="text-xs text-red-400">
-                        Avatar unavailable
-                      </p>
-                    )}
                   </div>
-                )}
-
-                {/* Speaking indicator */}
-                {isSpeaking && (
-                  <div className="absolute bottom-3 left-3 flex items-center gap-1.5 rounded-full bg-black/50 px-2.5 py-1">
-                    {[0, 1, 2].map((i) => (
-                      <motion.div
-                        key={i}
-                        className="h-1 w-1 rounded-full bg-indigo-400"
-                        animate={{ scaleY: [1, 2.5, 1] }}
-                        transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
-                      />
-                    ))}
-                    <span className="text-xs text-zinc-300 ml-1">Speaking</span>
-                  </div>
-                )}
-
-                {/* Close + stop buttons */}
-                <div className="absolute top-2 right-2 flex gap-1">
+                </div>
+                <div className="flex items-center gap-1">
                   {isSpeaking && (
                     <button
                       onClick={stopSpeaking}
-                      className="rounded-lg p-1.5 bg-black/50 text-zinc-400 hover:text-white transition-colors"
+                      className="rounded-lg p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                       title="Stop speaking"
                     >
                       <StopIcon />
@@ -304,19 +241,11 @@ export default function DigitalTwinWidget() {
                   )}
                   <button
                     onClick={() => setIsOpen(false)}
-                    className="rounded-lg p-1.5 bg-black/50 text-zinc-400 hover:text-white transition-colors"
+                    className="rounded-lg p-1.5 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors"
                     aria-label="Close"
                   >
                     <CloseIcon />
                   </button>
-                </div>
-              </div>
-
-              {/* Header */}
-              <div className="flex items-center gap-3 border-b border-white/8 px-4 py-2.5">
-                <div>
-                  <p className="text-sm font-semibold text-zinc-100">TJ Bush</p>
-                  <p className="text-xs text-zinc-500">Digital Twin · AI & Product Leader</p>
                 </div>
               </div>
 
