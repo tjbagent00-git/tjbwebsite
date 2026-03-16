@@ -100,9 +100,9 @@ export default function DigitalTwinWidget() {
 
       avatar.on(StreamingEvents.AVATAR_START_TALKING, () => setIsSpeaking(true));
       avatar.on(StreamingEvents.AVATAR_STOP_TALKING, () => setIsSpeaking(false));
-      avatar.on(StreamingEvents.STREAM_READY, (event) => {
-        if (videoRef.current && event.detail) {
-          videoRef.current.srcObject = event.detail;
+      avatar.on(StreamingEvents.STREAM_READY, (stream) => {
+        if (videoRef.current && stream) {
+          videoRef.current.srcObject = stream;
           videoRef.current.play().catch(() => {});
         }
         setAvatarStatus("ready");
@@ -115,7 +115,8 @@ export default function DigitalTwinWidget() {
         avatarName: AVATAR_ID,
         quality: AvatarQuality.Medium,
       });
-    } catch {
+    } catch (err) {
+      console.error("HeyGen avatar init failed:", err);
       setAvatarStatus("error");
     }
   }, []);
