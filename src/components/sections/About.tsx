@@ -3,16 +3,16 @@
 import { motion } from "framer-motion";
 
 const specialties = [
-  "Digital Transformation",
-  "AI Process Integration",
-  "Digital Twins",
-  "Enterprise Architecture",
-  "Agile Product Development",
-  "Business Model Development",
-  "Strategic Planning",
-  "Systems Design",
-  "Product Licensing",
-  "Cross-functional Alignment",
+  "Commercial Model Transformation",
+  "Subscription & Consumption Licensing",
+  "Product Go-to-Market Systems",
+  "Business & Enterprise Architecture",
+  "Cross-functional Program Leadership",
+  "AI Program Operations",
+  "Market Segmentation & Strategy",
+  "Executive Alignment & Communication",
+  "0→1 Product Development",
+  "Problem Decomposition & Framing",
 ];
 
 const transformations = [
@@ -51,21 +51,22 @@ export default function About() {
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <p className="text-lg leading-relaxed text-zinc-400">
-              I helped a $2B company replatform its entire business model to
-              subscription — and watched software revenue grow 350% year over
-              year as a result. I shipped a 0-to-1 digital twin product at Unity
-              that bridged a game engine into industrial simulation. Now I run AI
-              programs in the Office of the CTO at F5, translating agentic AI
-              capabilities into enterprise strategy and product outcomes.
+              I drove the business model transformation of a $2B company from
+              perpetual to subscription — 350% year-over-year software revenue
+              growth as a direct result. I&apos;ve taken a 0-to-1 product from
+              concept to early customers in a brand-new simulation market
+              category. Now I&apos;m in the Office of the CTO at F5, building
+              the operational infrastructure behind enterprise AI adoption.
             </p>
             <p className="mt-4 text-lg leading-relaxed text-zinc-400">
-              The pattern across 15+ years is the same: show up at the
-              inflection point, figure out what the technology actually makes
-              possible for the business, and build the organizational and product
-              capabilities to get there. SOA, multi-cloud, digital twins, AI —
-              I&apos;ve had a front-row seat to every major enterprise technology
-              shift. Not as an observer, but as the person accountable for
-              defining and delivering the change.
+              What&apos;s unusual isn&apos;t just the range of technology
+              markets — it&apos;s the breadth of business functions. Sales,
+              finance, legal, compliance, operations, engineering — I&apos;ve
+              delivered across all of them. My superpower is distilling that
+              complexity into clear frames that align leadership and teams on
+              what to build and why. The pattern holds across every wave:
+              figure out what the technology actually makes possible, then build
+              the organizational and product muscle to get there.
             </p>
           </motion.div>
 

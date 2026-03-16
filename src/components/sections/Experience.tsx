@@ -19,12 +19,12 @@ interface EarlierRole {
 
 const featuredRoles: FeaturedRole[] = [
   {
-    title: "Technical Program Manager — AI CoE & AI Program",
+    title: "Sr. Product Manager — AI Center of Excellence",
     company: "F5 Networks, Office of the CTO",
     period: "2023 — Present",
     current: true,
     narrative:
-      "Leading enterprise AI strategy and program execution in the Office of the CTO — translating agentic AI capabilities into product and business outcomes across F5's portfolio. Responsible for coordinating AI adoption, identifying high-value automation opportunities, and connecting AI research to real product impact.",
+      "Building the operational infrastructure for enterprise AI adoption in the Office of the CTO — data telemetry pipelines, the AI Data Fabric platform, AI governance and compliance requirements, and prototype-to-product integration paths. Responsible for the organizational charter, quarterly planning across engineering teams, and creating the operational systems that move AI from research to deployable product.",
   },
   {
     title: "Sr. Product Manager — Digital Twins & Spatial Co-simulation",
@@ -39,7 +39,7 @@ const featuredRoles: FeaturedRole[] = [
     company: "F5 Networks",
     period: "2018 — 2021",
     narrative:
-      "Drove the business model transformation of a $2B company in its shift from perpetual to subscription licensing — directly attributable to 350% year-over-year growth in software subscription revenue and 30% of total company revenue becoming subscription-based. Defined the cloud licensing platform architecture and led its integration across the full product portfolio.",
+      "Drove the business model transformation of a $2B company from perpetual to subscription — 350% year-over-year software revenue growth, 30% of total revenue converted to subscription. Cut new SKU creation time from 120 days to 5 hours. Defined the licensing platform architecture and led integration across sales, finance, legal, operations, and the full product portfolio.",
     metric: { value: "350%", label: "Y/Y software revenue growth" },
   },
 ];
